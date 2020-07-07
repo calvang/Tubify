@@ -1,16 +1,16 @@
 '''
 @author Calvin Huang
-@date 2020-7-2
+@date 2020-07-02
 
 Tubify: Youtube to Spotify
 
-create_spotify_playlist.py
+make_spotify_playlist.py
 '''
 import json
 import requests
 from secrets import spotify_uid, oauth_token
 
-class CreateSpotifyPlaylist:
+class MakeSpotifyPlaylist:
 
     def __init__(self):
         self.user_id = spotify_uid
