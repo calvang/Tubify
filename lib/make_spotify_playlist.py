@@ -37,12 +37,26 @@ class MakeSpotifyPlaylist:
                 'Authorization': 'Bearer {}'.format(oauth_token)
             }
         )
-        response_json = response.json()
+        response = response.json()
 
-        return response_json['id']
+        return response['id']
 
-    def find_spotify_song(self):
-        pass
+    def find_spotify_song(self, song_name, artist):
+        url = 'https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track&offset=0&limit-20'.format(
+            song_name,
+            artist
+        )
+        response = requests.get(
+            url,
+            headers={
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer {}'.format(oauth_token)
+            }
+        )
+        response = response.json()
+        songs = response['tracks']['items']
+
+        return songs[0]
 
     def transfer_song(self):
         pass
