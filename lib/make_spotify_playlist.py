@@ -39,14 +39,32 @@ class MakeSpotifyPlaylist:
         client = googleapiclient.discovery.build(api_service_name, api_version, credentials=credentials)
         return client
 
-    def get_youtube_playlist(self, playlist):
-        request = self.youtube_client.videos().list(
-            part='snippet,contentDetails,statistics',
-            myRating = 'like'
+    def get_youtube_playlist(self, youtube_playlist_name):
+        playlist_request = self.youtube_client.list(
+            part='snippet,contentDetails,statistics'
         )
-        response = request.execute()
+        playlist_response = playlist_request.execute()
 
-        for item in response['items']:
+        playlist = {
+            'id': '',
+            'name': '',
+            'videos': []
+        }
+        for item in playlist_response['items']:
+            title = item['snippet']['title']
+            if title == youtube_playlist_name:
+                playlist['name'] = title
+                playlist['id'] = item['id']
+                break;
+
+        videos_request = self.youtube_client.videos().list(
+            part='snippet,contentDetails,statistics',
+            playlistId = playlist['id']
+        )
+        videos_response = videos_request.execute()
+
+
+        for item in videos_response['items']:
             vid_title = item['snippet']['title']
             youtube_url = 'https://www.youtube.com/watch?v={}'.format(item['id'])
             video = youtube_dl.YoutubeDL({}).extract_innfo(youtube_url, download=False)
