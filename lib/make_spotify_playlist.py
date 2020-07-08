@@ -12,6 +12,7 @@ import requests
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import googleapiclient.errors
+import youtube_dl
 from secrets import spotify_uid, oauth_token
 
 class MakeSpotifyPlaylist:
@@ -20,6 +21,7 @@ class MakeSpotifyPlaylist:
         self.user_id = spotify_uid
         self.token = oauth_token
         self.youtube_client = get_youtube_client()
+        self.songs_info = {}
 
     def get_youtube_client(self):
         '''Retrieves client from Youtube API'''
@@ -38,7 +40,26 @@ class MakeSpotifyPlaylist:
         return client
 
     def get_youtube_playlist(self):
-        pass
+        request = self.youtube_client.videos().list(
+            part='snippet,contentDetails,statistics',
+            myRating = 'like'
+        )
+        response = request.execute()
+
+        for item in response['items']:
+            vid_title = item['snippet']['title']
+            youtube_url = 'https://www.youtube.com/watch?v={}'.format(item['id'])
+            video = youtube_dl.YoutubeDL({}).extract_innfo(youtube_url, download=False)
+            song_name = video['track']
+            song_artist = video['artist']
+            spotify_uri = self.find_spotify_song(song_name, song_artist)
+            self.songs_info[vid_title] = {
+                'youtube_url': youtube_url,
+                'song_name': song_name,
+                'song_artist': song_artist,
+                'spotify_uri': spotify_uri
+            }
+
 
     def create_spotify_playlist(self,playlist):
         '''Send POST to Spotify API'''
@@ -60,11 +81,11 @@ class MakeSpotifyPlaylist:
 
         return response['id']
 
-    def find_spotify_song(self, song_name, artist):
+    def find_spotify_song(self, song_name, song_artist):
         '''Send GET request for a song'''
         url = 'https://api.spotify.com/v1/search?query=track%3A{}+artist%3A{}&type=track&offset=0&limit-20'.format(
             song_name,
-            artist
+            song_artist
         )
         response = requests.get(
             url,
@@ -75,8 +96,9 @@ class MakeSpotifyPlaylist:
         )
         response = response.json()
         songs = response['tracks']['items']
+        uri = songs[0]
 
-        return songs[0]
+        return uri
 
     def transfer_song(self):
         pass
