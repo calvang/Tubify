@@ -21,7 +21,7 @@ class MakeSpotifyPlaylist:
         self.user_id = spotify_uid
         self.token = oauth_token
         self.youtube_client = get_youtube_client()
-        self.songs_info = {}
+        self.songs_dict = {}
 
     def get_youtube_client(self):
         '''Retrieves client from Youtube API'''
@@ -39,7 +39,7 @@ class MakeSpotifyPlaylist:
         client = googleapiclient.discovery.build(api_service_name, api_version, credentials=credentials)
         return client
 
-    def get_youtube_playlist(self):
+    def get_youtube_playlist(self, playlist_name):
         request = self.youtube_client.videos().list(
             part='snippet,contentDetails,statistics',
             myRating = 'like'
@@ -53,7 +53,7 @@ class MakeSpotifyPlaylist:
             song_name = video['track']
             song_artist = video['artist']
             spotify_uri = self.find_spotify_song(song_name, song_artist)
-            self.songs_info[vid_title] = {
+            self.songs_dict[vid_title] = {
                 'youtube_url': youtube_url,
                 'song_name': song_name,
                 'song_artist': song_artist,
@@ -61,11 +61,11 @@ class MakeSpotifyPlaylist:
             }
 
 
-    def create_spotify_playlist(self,playlist):
+    def create_spotify_playlist(self, playlist_name):
         '''Send POST to Spotify API'''
         request_body = json.dumps({
             'name': '',
-            'description': playlist,
+            'description': playlist_name,
             'public': True
         })
         url = 'https://api.spotify.com/v1/users/{}/playlists'.format(self.user_id)
@@ -74,7 +74,7 @@ class MakeSpotifyPlaylist:
             data = request_body,
             headers = {
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer {}'.format(oauth_token)
+                'Authorization': 'Bearer {}'.format(self.token)
             }
         )
         response = response.json()
@@ -91,7 +91,7 @@ class MakeSpotifyPlaylist:
             url,
             headers={
                 'Content-Type': 'application/json',
-                'Authorization': 'Bearer {}'.format(oauth_token)
+                'Authorization': 'Bearer {}'.format(self.token)
             }
         )
         response = response.json()
@@ -100,5 +100,20 @@ class MakeSpotifyPlaylist:
 
         return uri
 
-    def transfer_song(self):
-        pass
+    def transfer_songs(self, playlist_name):
+        '''Place all songs into Spotify playlist'''
+        self.get_youtube_playlist(self, playlist_name)
+        
+        song_uris = [data['spotify_uri'] for song, data in self.songs_dict.items()]
+        playlist_id = self.create_spotify_playlist()
+        url = 'https://api.spotify.com/v1/playlists/{}/tracks'.format(playlist_id)
+        json_data = json.dumps(song_uris)
+
+        response = requests.post(
+            url,
+            data = json_data,
+            headers = {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer {}'.format(self.token)
+            }
+        )
