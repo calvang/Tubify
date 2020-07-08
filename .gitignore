@@ -1,1 +1,3 @@
-lib/secrets.py
+lib/app_secrets.py
+lib/youtube_client_secrets.json
+env

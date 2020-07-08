@@ -39,7 +39,7 @@ class MakeSpotifyPlaylist:
         client = googleapiclient.discovery.build(api_service_name, api_version, credentials=credentials)
         return client
 
-    def get_youtube_playlist(self, playlist_name):
+    def get_youtube_playlist(self, playlist):
         request = self.youtube_client.videos().list(
             part='snippet,contentDetails,statistics',
             myRating = 'like'
@@ -61,11 +61,11 @@ class MakeSpotifyPlaylist:
             }
 
 
-    def create_spotify_playlist(self, playlist_name):
+    def create_spotify_playlist(self, playlist_name, playlist_desc):
         '''Send POST to Spotify API'''
         request_body = json.dumps({
-            'name': '',
-            'description': playlist_name,
+            'name': playlist_name,
+            'description': playlist_desc,
             'public': True
         })
         url = 'https://api.spotify.com/v1/users/{}/playlists'.format(self.user_id)
@@ -100,12 +100,12 @@ class MakeSpotifyPlaylist:
 
         return uri
 
-    def transfer_songs(self, playlist_name):
+    def transfer_songs(self, youtube_playlist, spotify_playlist_name):
         '''Place all songs into Spotify playlist'''
-        self.get_youtube_playlist(self, playlist_name)
+        self.get_youtube_playlist(self, youtube_playlist)
         
         song_uris = [data['spotify_uri'] for song, data in self.songs_dict.items()]
-        playlist_id = self.create_spotify_playlist()
+        playlist_id = self.create_spotify_playlist(spotify_playlist_name)
         url = 'https://api.spotify.com/v1/playlists/{}/tracks'.format(playlist_id)
         json_data = json.dumps(song_uris)
 
