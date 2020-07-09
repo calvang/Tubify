@@ -18,13 +18,14 @@ from secrets import spotify_uid, oauth_token
 class MakeSpotifyPlaylist:
 
     def __init__(self):
+        '''Initialize variables'''
         self.user_id = spotify_uid
         self.token = oauth_token
         self.youtube_client = get_youtube_client()
         self.songs_dict = {}
 
     def get_youtube_client(self):
-        '''Retrieves client from Youtube API'''
+        '''Retrieve client from Youtube API'''
         scopes = ["https://www.googleapis.com/auth/youtube.readonly"]
         os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
@@ -40,6 +41,7 @@ class MakeSpotifyPlaylist:
         return client
 
     def get_youtube_playlist(self, youtube_playlist_name):
+        '''Retrieve playlist, then videos from playlist'''
         playlist_request = self.youtube_client.list(
             part='snippet,contentDetails,statistics'
         )
